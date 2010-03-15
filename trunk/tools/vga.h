@@ -10,7 +10,7 @@
  *    Functions to be used in vga main file
  *--------------------------------------------------------------------*/
 
-
+#define MemoryWrite(A,V) *(volatile unsigned long*)(A)=(V)
 
 /************************GPIO0_out***********************************/
 /*0 1 2 3 4 5 6 7 8 9 10 1 2 3 4 5 6 7 8 9 20 1 2 3 4 5 6 7 8 9 30 1*/
@@ -92,9 +92,10 @@ int hsync;
             delay3_84us();
 }
 ///**************************  Character generator ********************/
-void char_generator(uint8_t mot[][],int R_pixel,int char_choice)
+void char_generator(int mot[416][8],int R_pixel,int char_choice,int rgb)
 {
-	int Nl,i;
+	int Nl,i,hsync;
+	hsync=1<<19;
 	
 	for(Nl=0;Nl<16;Nl++)			    								// 480 lines @ 31.25 khz --> y-axis
 	  {
@@ -104,18 +105,18 @@ void char_generator(uint8_t mot[][],int R_pixel,int char_choice)
 		delay1_92us();	
    
 	///*** Horizontal active video***
-		delay_x80ns(320-8-R_pixel);										// Left of the colored area 320-Npixel-R_pixel
+		delay_x80ns(320-8-312);										// Left of the colored area 320-Npixel-R_pixel
 			for(i=0;i<8;i++)
 			{
-				if(mot[Nl+char_choice][i])								// pixel = 1
+				if(mot[Nl][i]==1)								// pixel = 1
 				{
-					MemoryWrite(GPIO0_OUT,r);
+					MemoryWrite(GPIO0_OUT,rgb);
 					delay_x80ns(1);
-					MemoryWrite(GPIO0_CLEAR, r);
+					MemoryWrite(GPIO0_CLEAR, rgb);
 				}
 				else delay_x80ns(1);									// pixel = 0
 			}
-	   delay_x80ns(R_pixel);
+	   delay_x80ns(290);
 	///******************************
 	// Front Porch
 		delay640ns();
@@ -124,6 +125,9 @@ void char_generator(uint8_t mot[][],int R_pixel,int char_choice)
 		MemoryWrite(GPIO0_CLEAR, hsync);
 		delay3_84us();
 	  }
+	  ///**************************************
+			   for(Nl=0;Nl<455;Nl++)								// below  the colored area
+					Hsync_signal();
 }
 
 ///********************* Affichage sur l'ecran ************************/
@@ -185,6 +189,45 @@ void affichage(int Npixel, int Nline, int R_pixel, int U_lines,int r,int g,int b
 			  ///**************************************
 			   for(Np=0;Np<U_lines;Np++)								// below  the colored area
 					Hsync_signal();
+///*************************************************************		
+			
+			// vertical Front Porch
+				MemoryWrite(GPIO0_OUT,vsync);
+				for(i=0;i<11;i++)
+					Hsync_signal();
+	///--------------------------End Frame-------------------------	
+}
+/*********************************************************************************/
+void affichage2(int Npixel, int Nline, int R_pixel, int U_lines,int r,int g,int b)
+{
+  
+  int vsync=1<<20;
+  int hsync=1<<19;
+  int Nl;
+  int Np;
+  int i;
+  int rgb;
+  
+  rgb=r<<18;
+  g=g<<17;
+  b=b<<16;
+  //rgb=r|g|b;
+  ///----------------------Frame start---------------------------
+      // Vertical Sync Pulse
+				MemoryWrite(GPIO0_CLEAR, vsync);
+				for(i=0;i<2;i++)
+					Hsync_signal();
+				
+				
+		  // Vertical Back Porch
+			MemoryWrite(GPIO0_OUT,vsync);
+			for(i=0;i<28;i++)
+			  Hsync_signal();
+			  
+
+	///**********Vertical active video *****
+				char_generator(rom_char,R_pixel,0,rgb);
+			  
 ///*************************************************************		
 			
 			// vertical Front Porch
