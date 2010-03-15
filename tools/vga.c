@@ -12,27 +12,27 @@
 
 
 #include "plasma.h"
-#include "vga.h"
 #include "vga_char_rom.h"
-#define MemoryWrite(A,V) *(volatile unsigned long*)(A)=(V)
+#include "vga.h"
 
-void Led(int i);
-void affichage(Npixel, Nline,R_pixel,U_lines,r,g,b);
+
+
+void affichage(int Npixel,int Nline,int R_pixel,int U_lines,int r,int g,int b);
+
 
 
 void main(void)
 {
- 
  int r=1;
  int g=0;
  int b=0;
- int Npixel=320;
+ int Npixel=120;
  int Nline=480;
- int R_pixel=0; //   right pixels of the colored area
+ int R_pixel=311; //   right pixels of the colored area
  int U_lines=0; //   lines below the colored area  
 	
 		for(;;)
 		{
-		affichage(Npixel, Nline,R_pixel,U_lines,r,g,b);
+		affichage2(Npixel, Nline,R_pixel,U_lines,r,g,b);
 		}
 }
