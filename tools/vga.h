@@ -197,11 +197,10 @@ void affichage(int Npixel, int Nline, int R_pixel, int U_lines,int r,int g,int b
 	///--------------------------End Frame-------------------------	
 }
 /*********************************************************************************/
-void affichage2(int Npixel, int Nline, int R_pixel, int U_lines,int r,int g,int b)
+void affichage2(int R_pixel, int U_lines,int r,int g,int b)
 {
   
   int vsync=1<<20;
-  int hsync=1<<19;
   int i;
   int rgb;
   
