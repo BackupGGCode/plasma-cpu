@@ -57,9 +57,9 @@ entity plasma_3e is
         SPI_MISO   : inout std_logic;
 ---------------------modif--------------------------
 ------------------------------------------------------
-        LCD_E      : out std_logic;
-		  LCD_RS     : out std_logic;
-        LCD_RW     : out std_logic;
+        LCD_E   : out std_logic;
+		  LCD_RS  :out std_logic;
+        LCD_RW : out std_logic;
 -----------------------------------------------------        
 ----------------------------------------------------
         VGA_VSYNC  : out std_logic;     --VGA port
@@ -68,7 +68,7 @@ entity plasma_3e is
         VGA_GREEN  : out std_logic;
         VGA_BLUE   : out std_logic;
 
-        PS2_CLK    : in std_logic;      --PS2 Keyboard/mouse
+        PS2_CLK    : in std_logic;      --Keyboard
         PS2_DATA   : in std_logic;
 
         LED        : out std_logic_vector(7 downto 0);
@@ -106,21 +106,7 @@ architecture logic of plasma_3e is
            gpio0_out    : out std_logic_vector(31 downto 0);
            gpioA_in     : in std_logic_vector(31 downto 0));
    end component; --plasma
------------------------------------ VGA Module	
-	component vga_ctrl
-		port(clk50_in  : in std_logic;
-			  red_in   : in std_logic;
-           green_in : in std_logic;
-           blue_in  : in std_logic;
-           hs_in    : in std_logic;
-           vs_in    : in std_logic;
-		     red_out   : out std_logic;
-           green_out : out std_logic;
-           blue_out  : out std_logic;
-           hs_out    : out std_logic;
-           vs_out    : out std_logic);
-    end component;
------------------------------------------	
+
    component ddr_ctrl
       port(clk      : in std_logic;
            clk_2x   : in std_logic;
@@ -165,21 +151,13 @@ architecture logic of plasma_3e is
    signal no_ddr_start : std_logic;
    signal no_ddr_stop  : std_logic;
    signal ddr_active   : std_logic;
-   signal lcd_active   : std_logic; -- ajouté
-	signal flash_active : std_logic;
+   signal flash_active : std_logic;
    signal flash_cnt    : std_logic_vector(1 downto 0);
    signal flash_we     : std_logic;
    signal reset        : std_logic;
    signal gpio0_out    : std_logic_vector(31 downto 0);
    signal gpio0_in     : std_logic_vector(31 downto 0);
-   signal si_red		  : std_logic;	
-	signal si_green     : std_logic;
-	signal si_blue      : std_logic;
-	signal si_vsync     : std_logic;
-	signal si_hsync     : std_logic;
-	
-	
-	
+   
 begin  --architecture
    --Divide 50 MHz clock by two
    clk_div: process(reset, CLK_50MHZ, clk_reg)
@@ -191,37 +169,27 @@ begin  --architecture
       end if;
    end process; --clk_div
 
-
    reset <= ROT_CENTER;
    E_TX_EN   <= gpio0_out(28);  --Ethernet
    E_TXD     <= gpio0_out(27 downto 24);
    E_MDC     <= gpio0_out(23);
    E_MDIO    <= gpio0_out(21) when gpio0_out(22) = '1' else 'Z';
---   VGA_VSYNC <= gpio0_out(20);
---   VGA_HSYNC <= gpio0_out(19);
---   VGA_RED   <= gpio0_out(18);
---   VGA_GREEN <= gpio0_out(17);
---   VGA_BLUE  <= gpio0_out(16);
-
-   VGA_VSYNC <= si_vsync;
-   VGA_HSYNC <= si_hsync;
-   VGA_RED   <= si_red;
-   VGA_GREEN <= si_green;
-   VGA_BLUE  <= si_blue;
-
-
+   VGA_VSYNC <= gpio0_out(20);
+   VGA_HSYNC <= gpio0_out(19);
+   VGA_RED   <= gpio0_out(18);
+   VGA_GREEN <= gpio0_out(17);
+   VGA_BLUE  <= gpio0_out(16);
 ---------------------modif--------------------------
----------------------- LCD -----------------------------
+------------------------------------------------------
 	
 	LCD_RS <= gpio0_out(10);
 	LCD_RW <= gpio0_out(9);
 	LCD_E  <= gpio0_out(8);
----------------------end modif----------------------------
----------------------- LED ----------------------------
+---------------------modif--------------------------
+------------------------------------------------------
    LED <= gpio0_out(7 downto 0);
--------------------------------------------------------  
    gpio0_in(31 downto 21) <= (others => '0');
-	gpio0_in(20 downto 13) <= E_RX_CLK & E_RX_DV & E_RXD & E_TX_CLK & E_MDIO;
+   gpio0_in(20 downto 13) <= E_RX_CLK & E_RX_DV & E_RXD & E_TX_CLK & E_MDIO;
    gpio0_in(12 downto 10) <= SF_STS & PS2_CLK & PS2_DATA;
    gpio0_in(9 downto 0) <= ROT_A & ROT_B & BTN_EAST & BTN_NORTH & 
                            BTN_SOUTH & BTN_WEST & SW;
@@ -234,14 +202,13 @@ begin  --architecture
    SF_BYTE <= '1';  --16-bit access
    SF_A    <= address(25 downto 2) & '0' when flash_active = '1' else
               "0000000000000000000000000";
-  
    SF_D (15 downto 12)    <= data_write(15 downto 12) when 
               flash_active = '1' and write_enable = '1'
               else "ZZZZ";
 				  
 	SF_D(11 downto 8) <= data_write(11 downto 8) when 
               flash_active = '1' and write_enable = '1'
-              else gpio0_out(14 downto 11) when flash_active = '0'
+              else gpio0_out(14 downto 11) when  flash_active = '0'
 				  else "ZZZZ"; 
 				  
 	 SF_D (7 downto 1)    <= data_write(7 downto 1) when 
@@ -313,20 +280,6 @@ begin  --architecture
          SD_UDQS  => SD_UDQS,    --upper_data_strobe
          SD_LDM   => SD_LDM,     --low_byte_enable
          SD_LDQS  => SD_LDQS);   --low_data_strobe
-
-
-	vga: vga_ctrl 
-			port map (clk50_in=>CLK_50MHZ,
-						 red_in   => gpio0_out(18),
-						 green_in => gpio0_out(17),
-						 blue_in  => gpio0_out(16),
-                   hs_in    => gpio0_out(19),
-                   vs_in    => gpio0_out(20),
-						 red_out   => si_red,
-						 green_out => si_green,
-						 blue_out  => si_blue,
-                   hs_out    => si_hsync,
-                   vs_out    => si_vsync);
 
    --Flash control (only lower 16-bit data lines connected)
    flash_ctrl: process(reset, clk_reg, flash_active, write_enable, 
