@@ -2,7 +2,7 @@
 
 = Introduction =
 
-This will show you how to setup the project in Xilinx ISE
+In This Page, I will show you how to setup the project in Xilinx ISE
 
 
 = Details =
