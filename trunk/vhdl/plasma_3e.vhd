@@ -262,7 +262,7 @@ begin  --architecture
 										
 --	Button_out(3 downto 0)<=gpio0_in(7 downto 4);
 
-   u1_plama: plasma 
+   u1_plasma: plasma 
       generic map (memory_type => "XILINX_16X",
                    log_file    => "UNUSED",
                    ethernet    => '1',
