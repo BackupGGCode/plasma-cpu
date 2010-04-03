@@ -20,8 +20,9 @@
 --   0x20000030  GPIO0 Out Set bits
 --   0x20000040  GPIO0 Out Clear bits
 --   0x20000050  GPIOA In
---   0x20000060  Counter
+--   0x20000060  Counter  
 --   0x20000070  Ethernet transmit count
+--   0x40000000  VGA Counter
 --   IRQ bits:
 --      7   GPIO31
 --      6  ^GPIO31
@@ -56,7 +57,8 @@ entity plasma is
         no_ddr_stop  : out std_logic;
         
         gpio0_out    : out std_logic_vector(31 downto 0);
-        gpioA_in     : in std_logic_vector(31 downto 0));
+        gpioA_in     : in std_logic_vector(31 downto 0);
+		  Vga_Counter  : in std_logic_vector(31 downto 0));
 end; --entity plasma
 
 architecture logic of plasma is
@@ -79,8 +81,8 @@ architecture logic of plasma is
    signal enable_uart_read  : std_logic;
    signal enable_uart_write : std_logic;
    signal enable_eth        : std_logic;
-
-   signal gpio0_reg         : std_logic_vector(31 downto 0);
+	
+	signal gpio0_reg         : std_logic_vector(31 downto 0);
    signal uart_write_busy   : std_logic;
    signal uart_data_avail   : std_logic;
    signal irq_mask_reg      : std_logic_vector(7 downto 0);
@@ -171,7 +173,7 @@ begin  --architecture
       ram_data_r, data_read, data_read_uart, cpu_pause,
       irq_mask_reg, irq_status, gpio0_reg, write_enable,
       cache_checking,
-      gpioA_in, counter_reg, cpu_data_w)
+      gpioA_in, counter_reg, cpu_data_w,VGA_counter)
    begin
       case cpu_address(30 downto 28) is
       when "000" =>         --internal RAM
@@ -195,13 +197,15 @@ begin  --architecture
          when "101" =>      --gpioA
             cpu_data_r <= gpioA_in;
          when "110" =>      --counter
-            cpu_data_r <= counter_reg;        
-         when others =>
+            cpu_data_r <= counter_reg;
+			when others =>
             cpu_data_r <= gpioA_in;
          end case;
       when "011" =>         --flash
          cpu_data_r <= data_read;
-      when others =>
+      when "100" =>		 --Vga_Counter
+				cpu_data_r <= Vga_counter;
+		when others =>
          cpu_data_r <= ZERO;
       end case;
 
