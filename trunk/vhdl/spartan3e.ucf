@@ -557,6 +557,3 @@ NET "CLK_50MHZ" TNM_NET = "CLK_50MHZ";
 NET "clk_reg1" TNM_NET = "clk_reg1";
 TIMESPEC TS_clk_reg1 = PERIOD "clk_reg1" 40 ns HIGH 50 %;
 NET "E_RX_CLK" CLOCK_DEDICATED_ROUTE = FALSE;
-###############################################"
-INST "u1_plama" AREA_GROUP = "pblock_u1_plama";
-INST "Vga_Ctrl" AREA_GROUP = "pblock_Vga_Ctrl";
