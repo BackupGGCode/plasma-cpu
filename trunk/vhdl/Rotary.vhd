@@ -13,10 +13,10 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 entity Rotary_Debouncer is
     Port (        rotary_a : in std_logic;
                   rotary_b : in std_logic;
-                       clk : in std_logic;
-							  rst : in std_logic;
-					  rot_out_a : out std_logic;
-				     rot_out_b : out std_logic);
+                  clk : in std_logic;
+				  rst : in std_logic;
+				  rot_out_a : out std_logic;
+				  rot_out_b : out std_logic);
     end Rotary_Debouncer;
 --
 ------------------------------------------------------------------------------------
@@ -37,10 +37,10 @@ signal        rotary_q2 : std_logic;
 signal  delay_rotary_q1 : std_logic;
 signal     rotary_event : std_logic;
 signal      rotary_left : std_logic;
-signal     rotary_a_out : std_logic;
-signal     rotary_b_out : std_logic;
+--signal     rotary_a_out : std_logic;
+--signal     rotary_b_out : std_logic;
 signal    	start_count : std_logic;
-signal    	  end_count : std_logic;
+--signal    	  end_count : std_logic;
 signal				  cnt : std_logic_vector(20 downto 0);	
 
 
@@ -101,7 +101,6 @@ begin
   direction: process(clk,start_count)
   begin
     if clk'event and clk='1' then
-
       delay_rotary_q1 <= rotary_q1;
       if rotary_q1='1' and delay_rotary_q1='0' then
         rotary_event <= '1';
@@ -113,6 +112,60 @@ begin
 	 end if;
   end process direction;
 -- 
+
+seq: process(clk, rst)
+begin
+	if rst='1' then 
+		etat <= s0;
+		cnt<=(others=>'0');
+	elsif clk'event and clk='1' then 
+		etat <= nextetat;
+		if start_count='1' then
+			cnt<=cnt+1;
+		else
+			cnt<=(others=>'0');
+		end if;
+	end if;
+end process;
+
+combi: process (etat,rotary_left,rotary_event,cnt)
+begin
+	start_count<='0';
+	case etat is
+		when s0 =>
+			rot_out_a<='0';
+			rot_out_b<='0';
+			if rotary_event='1' then
+				if rotary_left='1' then nextetat <= s1;       -- to the left
+				elsif rotary_left='0' then nextetat <= s2;	 -- to the right
+				end if;
+				
+			else
+				nextetat <= s0;
+			end if;
+		when s1 =>
+			rot_out_a<='1';
+			rot_out_b<='1';
+			start_count<='1';
+			if cnt(20)='1' then
+					start_count<='0';
+					nextetat <= s0;
+			else
+				nextetat <= s1;
+			end if;
+		when s2 =>
+			rot_out_a<='0';
+			rot_out_b<='1';
+			start_count<='1';
+			if cnt(20)='1' then
+					start_count<='0';
+					nextetat <= s0;
+			else
+				nextetat <= s2;
+			end if;
+	end case;
+end process;
+
 --	counter:process(clk)
 --	begin
 --		if clk'event and clk='1' then
@@ -152,50 +205,5 @@ begin
 --	end if;
 --  end process;
 --  
-  
-  
-
-
-
-
-seq: process(clk, rst)
-begin
-	if rst='1' then etat <= s0;
-	elsif clk'event and clk='1' then etat <= nextetat;
-	end if;
-end process;
-
-combi: process (etat,rotary_left,rotary_event )
-begin
-	case etat is
-		when s0 =>
-			rot_out_a<='0';
-			rot_out_b<='0';
-			if rotary_event='1' then
-				if rotary_left='1' then nextetat <= s1;       -- to the left
-				elsif rotary_left='0' then nextetat <= s2;	 -- to the right
-				end if;
-			end if;
-		when s1 =>
-			rot_out_a<='1';
-			rot_out_b<='1';
-			cnt<=cnt+1;
-			if cnt(20)='1' then
-					nextetat <= s0;
-					cnt<=(others=>'0');
-			end if;
-		when s2 =>
-			rot_out_a<='0';
-			rot_out_b<='1';
-			cnt<=cnt+1;
-			if cnt(20)='1' then
-					nextetat <= s0;
-					cnt<=(others=>'0');
-			end if;
-		when others =>
-			null;
-	end case;
-end process;
-
-
+ 
 end;
