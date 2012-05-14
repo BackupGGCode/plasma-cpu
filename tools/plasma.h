@@ -27,6 +27,7 @@
 #define COUNTER_REG       0x20000060
 #define ETHERNET_REG      0x20000070
 #define FLASH_BASE        0x30000000
+#define VGA_Counter       0x40000000
 
 /*********** GPIO out bits ***************/
 #define ETHERNET_MDIO     0x00200000
