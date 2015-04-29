@@ -1,0 +1,1 @@
+How to setup the project in Xilinx ISE for Spartan-3E Starter KIT
